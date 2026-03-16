@@ -308,13 +308,13 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
                 htmlFor="user_name"
                 className="text-foreground font-medium"
               >
-                Nombre del niño/a que asiste
+                Nombre y apellido del niño/a que asiste
               </Label>
               <Input
                 id="user_name"
                 name="user_name"
                 type="text"
-                placeholder="Escribe el nombre del niño/a"
+                placeholder="Escribe el nombre y apellido del niño/a"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="bg-input border-primary/30 focus:border-primary focus:ring-primary/50 text-foreground placeholder:text-muted-foreground h-12"
@@ -327,7 +327,7 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
                 htmlFor="user_email"
                 className="text-foreground font-medium"
               >
-                Email del padre/madre
+                Email del apoderado/acompañante
               </Label>
               <Input
                 id="user_email"
