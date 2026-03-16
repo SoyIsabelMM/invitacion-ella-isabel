@@ -1,0 +1,13 @@
+# Run from _backend: docker compose up -d
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: rsvp-mongodb
+    # restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./appdata/mongodb:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: rsvp
