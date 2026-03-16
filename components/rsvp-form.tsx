@@ -337,7 +337,7 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
             <Button
               type="submit"
               className="w-full h-14 text-lg font-bold gradient-gold text-primary-foreground hover:opacity-90 transition-all duration-300 glow-gold"
-              disabled={isLoading || !emailjsLoaded}
+              disabled={isLoading || (SEND_EMAILS && !emailjsLoaded)}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
