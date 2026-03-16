@@ -1,112 +1,138 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
-import { Send, CheckCircle, Users, Sparkles, Star, Ticket, Mail, Calendar } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import {
+  Send,
+  CheckCircle,
+  Users,
+  Sparkles,
+  Star,
+  Ticket,
+  Mail,
+  Calendar,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // EmailJS Configuration - Replace these with your actual values
-const EMAILJS_SERVICE_ID = "service_9vbwwcc"
-const EMAILJS_TEMPLATE_ID = "template_qar72vj"
-const EMAILJS_AUTO_REPLY_TEMPLATE_ID = "template_x7hcydt"
-const EMAILJS_PUBLIC_KEY = "8xMWbqKFCPpaRP8mV"
+const EMAILJS_SERVICE_ID = 'service_9vbwwcc';
+const EMAILJS_TEMPLATE_ID = 'template_qar72vj';
+const EMAILJS_AUTO_REPLY_TEMPLATE_ID = 'template_x7hcydt';
+const EMAILJS_PUBLIC_KEY = '8xMWbqKFCPpaRP8mV';
 
 interface RSVPFormProps {
-  isSubmitted: boolean
-  onSubmit: () => void
+  isSubmitted: boolean;
+  onSubmit: () => void;
 }
 
 // Google Calendar URL for the event
 const googleCalendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-  "Ella Isabel 6th Birthday World Tour - K-Pop Party"
+  'Ella Isabel 6th Birthday World Tour - K-Pop Party',
 )}&dates=20260419T163000/20260419T193000&details=${encodeURIComponent(
-  "Fiesta de cumpleaños K-Pop de Ella Isabel. Tema: Huntrix Golden. Los niños pueden ir disfrazados!"
+  'Fiesta de cumpleaños K-Pop de Ella Isabel. Tema: Huntrix Golden. Los niños pueden ir disfrazados!',
 )}&location=${encodeURIComponent(
-  "Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica"
-)}&sf=true&output=xml`
+  'Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica',
+)}&sf=true&output=xml`;
 
 export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [emailjsLoaded, setEmailjsLoaded] = useState(false)
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [emailjsLoaded, setEmailjsLoaded] = useState(false);
 
   // Load EmailJS SDK
   useEffect(() => {
-    const script = document.createElement("script")
-    script.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
-    script.async = true
+    const script = document.createElement('script');
+    script.src =
+      'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+    script.async = true;
     script.onload = () => {
       // Initialize EmailJS with public key
-      if (typeof window !== "undefined" && (window as unknown as { emailjs: { init: (key: string) => void } }).emailjs) {
-        (window as unknown as { emailjs: { init: (key: string) => void } }).emailjs.init(EMAILJS_PUBLIC_KEY)
-        setEmailjsLoaded(true)
+      if (
+        typeof window !== 'undefined' &&
+        (window as unknown as { emailjs: { init: (key: string) => void } })
+          .emailjs
+      ) {
+        (
+          window as unknown as { emailjs: { init: (key: string) => void } }
+        ).emailjs.init(EMAILJS_PUBLIC_KEY);
+        setEmailjsLoaded(true);
       }
-    }
-    document.head.appendChild(script)
+    };
+    document.head.appendChild(script);
 
     return () => {
       // Cleanup script on unmount
-      const existingScript = document.querySelector(`script[src="${script.src}"]`)
+      const existingScript = document.querySelector(
+        `script[src="${script.src}"]`,
+      );
       if (existingScript) {
-        existingScript.remove()
+        existingScript.remove();
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const emailjs = (window as unknown as {
-        emailjs: {
-          send: (serviceId: string, templateId: string, params: Record<string, string>) => Promise<{ status: number }>
+      const emailjs = (
+        window as unknown as {
+          emailjs: {
+            send: (
+              serviceId: string,
+              templateId: string,
+              params: Record<string, string>,
+            ) => Promise<{ status: number }>;
+          };
         }
-      }).emailjs
+      ).emailjs;
 
       if (!emailjs || !emailjsLoaded) {
-        throw new Error("EmailJS no está cargado")
+        throw new Error('EmailJS no está cargado');
       }
 
       // Send notification email to organizers
       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
         user_name: name,
         user_email: email,
-        to_email: "isabelmartinez19.30@gmail.com",
-        cc_email: "alvarez.c.daniel@gmail.com",
-        event_name: "Ella Isabel 6th Birthday World Tour",
-        event_date: "Domingo 19 de Abril, 2026",
-        event_time: "16:30 a 19:30",
-        event_location: "Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica",
-      })
+        to_email: 'isabelmartinez19.30@gmail.com',
+        cc_email: 'alvarez.c.daniel@gmail.com',
+        event_name: 'Ella Isabel 6th Birthday World Tour',
+        event_date: 'Domingo 19 de Abril, 2026',
+        event_time: '16:30 a 19:30',
+        event_location:
+          'Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica',
+      });
 
       // Send auto-confirmation email to guest with Golden Huntrix theme
       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_AUTO_REPLY_TEMPLATE_ID, {
         user_name: name,
         user_email: email,
         to_email: email,
-        event_name: "Ella Isabel 6th Birthday World Tour",
-        event_date: "Domingo 19 de Abril, 2026",
-        event_time: "16:30 a 19:30",
-        event_location: "Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica",
+        event_name: 'Ella Isabel 6th Birthday World Tour',
+        event_date: 'Domingo 19 de Abril, 2026',
+        event_time: '16:30 a 19:30',
+        event_location:
+          'Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica',
         calendar_link: googleCalendarUrl,
-        dress_code: "K-Pop / Huntrix Golden - Los niños pueden ir disfrazados!",
-      })
+        dress_code: 'K-Pop / Huntrix Golden - Los niños pueden ir disfrazados!',
+      });
 
-      onSubmit()
+      onSubmit();
     } catch (err) {
-      console.error("EmailJS Error:", err)
-      setError("Error al enviar. Por favor intenta de nuevo.")
+      console.error('EmailJS Error:', err);
+      setError('Error al enviar. Por favor intenta de nuevo.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (isSubmitted) {
     return (
@@ -114,19 +140,21 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
         <Card className="glassmorphism border-2 border-primary/50 glow-gold overflow-hidden">
           <CardContent className="p-6 md:p-8 text-center space-y-6">
             {/* Huntrix Golden characters image */}
-            <div className="relative w-full max-w-sm mx-auto aspect-[4/3] rounded-xl overflow-hidden border-2 border-primary/50 glow-gold">
+            <div className="relative w-full max-w-sm mx-auto aspect-4/3 rounded-xl overflow-hidden border-2 border-primary/50 glow-gold">
               <Image
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/a65d4b805f0b4ded1342f03b3c3235b0-L7iMKzkcfhqFm1SGk9nm83ppGgYp4Z.jpg"
                 alt="Huntrix Golden"
                 fill
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent" />
 
               {/* Golden ticket badge overlay */}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full gradient-gold">
                 <CheckCircle className="w-5 h-5 text-primary-foreground" />
-                <span className="text-sm font-bold text-primary-foreground">VIP CONFIRMED</span>
+                <span className="text-sm font-bold text-primary-foreground">
+                  VIP CONFIRMED
+                </span>
               </div>
             </div>
 
@@ -137,7 +165,10 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
                 <h3 className="text-2xl md:text-3xl font-black text-primary text-glow-gold tracking-wide">
                   GOLDEN TICKET
                 </h3>
-                <Star className="w-5 h-5 text-primary animate-twinkle" style={{ animationDelay: "0.3s" }} />
+                <Star
+                  className="w-5 h-5 text-primary animate-twinkle"
+                  style={{ animationDelay: '0.3s' }}
+                />
               </div>
 
               <div className="h-0.5 w-40 mx-auto gradient-gold rounded-full" />
@@ -172,14 +203,23 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
             {/* Decorative sparkles */}
             <div className="flex justify-center gap-3 pt-2">
               <Sparkles className="w-6 h-6 text-primary animate-twinkle" />
-              <Sparkles className="w-6 h-6 text-accent animate-twinkle" style={{ animationDelay: "0.15s" }} />
-              <Sparkles className="w-6 h-6 text-secondary animate-twinkle" style={{ animationDelay: "0.3s" }} />
-              <Sparkles className="w-6 h-6 text-primary animate-twinkle" style={{ animationDelay: "0.45s" }} />
+              <Sparkles
+                className="w-6 h-6 text-accent animate-twinkle"
+                style={{ animationDelay: '0.15s' }}
+              />
+              <Sparkles
+                className="w-6 h-6 text-secondary animate-twinkle"
+                style={{ animationDelay: '0.3s' }}
+              />
+              <Sparkles
+                className="w-6 h-6 text-primary animate-twinkle"
+                style={{ animationDelay: '0.45s' }}
+              />
             </div>
           </CardContent>
         </Card>
       </section>
-    )
+    );
   }
 
   return (
@@ -193,7 +233,9 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
             </CardTitle>
             <Ticket className="w-5 h-5 text-primary" />
           </div>
-          <p className="text-sm text-muted-foreground">Reserva tu lugar en el tour</p>
+          <p className="text-sm text-muted-foreground">
+            Reserva tu lugar en el tour
+          </p>
         </CardHeader>
 
         <CardContent className="p-6">
@@ -207,7 +249,7 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
               <Users className="w-5 h-5 text-accent" />
             </div>
             <p className="text-foreground font-medium">
-              Invitacion valida para 1 nino y 1 acompanante
+              Invitacion valida para 1 niño y 1 acompanante
             </p>
           </div>
 
@@ -219,14 +261,17 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="user_name" className="text-foreground font-medium">
-                Nombre del nino/a que asiste
+              <Label
+                htmlFor="user_name"
+                className="text-foreground font-medium"
+              >
+                Nombre del niño/a que asiste
               </Label>
               <Input
                 id="user_name"
                 name="user_name"
                 type="text"
-                placeholder="Escribe el nombre del nino/a"
+                placeholder="Escribe el nombre del niño/a"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="bg-input border-primary/30 focus:border-primary focus:ring-primary/50 text-foreground placeholder:text-muted-foreground h-12"
@@ -235,7 +280,10 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="user_email" className="text-foreground font-medium">
+              <Label
+                htmlFor="user_email"
+                className="text-foreground font-medium"
+              >
                 Email del padre/madre
               </Label>
               <Input
@@ -271,12 +319,12 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
               )}
             </Button>
 
-            <p className="text-center text-sm text-accent font-semibold animate-pulse">
+            <p className="text-center text-xl text-accent font-semibold animate-pulse">
               Confirmar antes del 5 de Abril
             </p>
           </form>
         </CardContent>
       </Card>
     </section>
-  )
+  );
 }

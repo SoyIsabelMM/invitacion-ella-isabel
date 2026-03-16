@@ -1,36 +1,38 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { HeroSection } from "@/components/hero-section"
-import { CountdownTimer } from "@/components/countdown-timer"
-import { EventDetails } from "@/components/event-details"
-import { GiftInfo } from "@/components/gift-info"
-import { MusicPlayer } from "@/components/music-player"
-import { CalendarButton } from "@/components/calendar-button"
-import { RSVPForm } from "@/components/rsvp-form"
-import { SpecialNotes } from "@/components/special-notes"
-import { FloatingDecorations } from "@/components/floating-decorations"
+import { useState } from 'react';
+import { HeroSection } from '@/components/hero-section';
+import { CountdownTimer } from '@/components/countdown-timer';
+import { EventDetails } from '@/components/event-details';
+import { GiftInfo } from '@/components/gift-info';
+import { MusicPlayer } from '@/components/music-player';
+import { CalendarButton } from '@/components/calendar-button';
+import { RSVPForm } from '@/components/rsvp-form';
+import { SpecialNotes } from '@/components/special-notes';
+import { FloatingDecorations } from '@/components/floating-decorations';
 
 export default function InvitationPage() {
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   return (
     <main className="min-h-screen bg-background relative overflow-hidden">
       <FloatingDecorations />
-      
+
       <div className="relative z-10">
         <HeroSection />
-        
+
         <div className="container mx-auto px-4 py-12 space-y-8 max-w-4xl">
           <CountdownTimer />
+          <MusicPlayer />
           <EventDetails />
           <GiftInfo />
-          <MusicPlayer />
-          <CalendarButton />
-          <RSVPForm isSubmitted={isSubmitted} onSubmit={() => setIsSubmitted(true)} />
           <SpecialNotes />
+          <RSVPForm
+            isSubmitted={isSubmitted}
+            onSubmit={() => setIsSubmitted(true)}
+          />
         </div>
-        
+
         {/* Footer */}
         <footer className="text-center py-8 border-t border-primary/20">
           <p className="text-muted-foreground text-sm">
@@ -44,5 +46,5 @@ export default function InvitationPage() {
         </footer>
       </div>
     </main>
-  )
+  );
 }
