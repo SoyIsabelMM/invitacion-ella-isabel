@@ -25,11 +25,23 @@ const SEND_EMAILS =
   process.env.NEXT_PUBLIC_SEND_EMAILS === 'true' ||
   process.env.NEXT_PUBLIC_SEND_EMAILS === '1';
 
-// EmailJS Configuration - Replace these with your actual values
-const EMAILJS_SERVICE_ID = 'service_9vbwwcc';
-const EMAILJS_TEMPLATE_ID = 'template_qar72vj';
-const EMAILJS_AUTO_REPLY_TEMPLATE_ID = 'template_x7hcydt';
-const EMAILJS_PUBLIC_KEY = '8xMWbqKFCPpaRP8mV';
+// EmailJS Configuration (from .env; only used when NEXT_PUBLIC_SEND_EMAILS is true)
+const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID ?? '';
+const EMAILJS_TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID ?? '';
+const EMAILJS_AUTO_REPLY_TEMPLATE_ID =
+  process.env.NEXT_PUBLIC_EMAILJS_AUTO_REPLY_TEMPLATE_ID ?? '';
+const EMAILJS_PUBLIC_KEY =
+  process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY ?? '';
+
+// Event details (from .env; used in emails and Google Calendar link)
+const EVENT_NAME =
+  process.env.NEXT_PUBLIC_RSVP_EVENT_NAME;
+const EVENT_DATE =
+  process.env.NEXT_PUBLIC_RSVP_EVENT_DATE;
+const EVENT_TIME =
+  process.env.NEXT_PUBLIC_RSVP_EVENT_TIME;
+const EVENT_LOCATION =
+  process.env.NEXT_PUBLIC_RSVP_EVENT_LOCATION;
 
 interface RSVPFormProps {
   isSubmitted: boolean;
@@ -38,12 +50,10 @@ interface RSVPFormProps {
 
 // Google Calendar URL for the event
 const googleCalendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-  'Ella Isabel 6th Birthday World Tour - K-Pop Party',
+  `${EVENT_NAME}`,
 )}&dates=20260419T163000/20260419T193000&details=${encodeURIComponent(
   'Fiesta de cumpleaños K-Pop de Ella Isabel. Tema: Huntrix Golden. Los niños pueden ir disfrazados!',
-)}&location=${encodeURIComponent(
-  'Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica',
-)}&sf=true&output=xml`;
+)}&location=${encodeURIComponent(EVENT_LOCATION!)}&sf=true&output=xml`;
 
 export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
   const [name, setName] = useState('');
@@ -132,13 +142,14 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
           user_name: name,
           user_email: email,
-          to_email: 'isabelmartinez19.30@gmail.com',
-          cc_email: 'alvarez.c.daniel@gmail.com',
-          event_name: 'Ella Isabel 6th Birthday World Tour',
-          event_date: 'Domingo 19 de Abril, 2026',
-          event_time: '16:30 a 19:30',
-          event_location:
-            'Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica',
+          to_email:
+            process.env.NEXT_PUBLIC_RSVP_ORGANIZER_TO_EMAIL ?? '',
+          cc_email:
+            process.env.NEXT_PUBLIC_RSVP_ORGANIZER_CC_EMAIL ?? '',
+          event_name: EVENT_NAME!,
+          event_date: EVENT_DATE!,
+          event_time: EVENT_TIME!,
+          event_location: EVENT_LOCATION!,
         });
 
         // Send auto-confirmation email to guest with Golden Huntrix theme
@@ -146,11 +157,10 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
           user_name: name,
           user_email: email,
           to_email: email,
-          event_name: 'Ella Isabel 6th Birthday World Tour',
-          event_date: 'Domingo 19 de Abril, 2026',
-          event_time: '16:30 a 19:30',
-          event_location:
-            'Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica',
+          event_name: EVENT_NAME!,
+          event_date: EVENT_DATE!,
+          event_time: EVENT_TIME!,
+          event_location: EVENT_LOCATION!,
           calendar_link: googleCalendarUrl,
           dress_code: 'K-Pop / Huntrix Golden - Los niños pueden ir disfrazados!',
         });
