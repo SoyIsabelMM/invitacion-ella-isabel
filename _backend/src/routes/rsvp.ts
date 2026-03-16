@@ -10,6 +10,11 @@ router.post('/', validateRsvpBody, async (req: Request<object, object, RsvpBody>
   try {
     const { guestName, guardianEmail } = req.body;
     const db = getDb();
+    const existing = await db.collection(COLLECTION).findOne({ guestName, guardianEmail });
+    if (existing) {
+      res.status(409).json({ error: 'Ya existe una confirmación con este nombre y correo. Si ya enviaste tu RSVP, no es necesario volver a confirmar.' });
+      return;
+    }
     const result = await db.collection(COLLECTION).insertOne({
       guestName,
       guardianEmail,
