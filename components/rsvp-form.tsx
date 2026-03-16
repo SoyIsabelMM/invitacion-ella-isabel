@@ -17,6 +17,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+// RSVP API (optional: if set, RSVPs are persisted on Backend before sending emails)
+const RSVP_API_URL = process.env.NEXT_PUBLIC_RSVP_API_URL ?? '';
+
+// Feature flag: set to "true" or "1" to send emails via EmailJS; otherwise emails are skipped
+const SEND_EMAILS =
+  process.env.NEXT_PUBLIC_SEND_EMAILS === 'true' ||
+  process.env.NEXT_PUBLIC_SEND_EMAILS === '1';
+
 // EmailJS Configuration - Replace these with your actual values
 const EMAILJS_SERVICE_ID = 'service_9vbwwcc';
 const EMAILJS_TEMPLATE_ID = 'template_qar72vj';
@@ -44,8 +52,9 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [emailjsLoaded, setEmailjsLoaded] = useState(false);
 
-  // Load EmailJS SDK
+  // Load EmailJS SDK only when email sending is enabled
   useEffect(() => {
+    if (!SEND_EMAILS) return;
     const script = document.createElement('script');
     script.src =
       'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
@@ -82,53 +91,77 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
     setError(null);
 
     try {
-      const emailjs = (
-        window as unknown as {
-          emailjs: {
-            send: (
-              serviceId: string,
-              templateId: string,
-              params: Record<string, string>,
-            ) => Promise<{ status: number }>;
-          };
+      // Persist RSVP to backend first when API URL is configured
+      if (RSVP_API_URL) {
+        const res = await fetch(`${RSVP_API_URL}/api/rsvp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            guestName: name.trim(),
+            guardianEmail: email.trim().toLowerCase(),
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          const msg =
+            Array.isArray(data?.errors) && data.errors.length > 0
+              ? data.errors.join('. ')
+              : data?.error ?? 'Error al guardar la confirmación. Intenta de nuevo.';
+          throw new Error(msg);
         }
-      ).emailjs;
-
-      if (!emailjs || !emailjsLoaded) {
-        throw new Error('EmailJS no está cargado');
       }
 
-      // Send notification email to organizers
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        user_name: name,
-        user_email: email,
-        to_email: 'isabelmartinez19.30@gmail.com',
-        cc_email: 'alvarez.c.daniel@gmail.com',
-        event_name: 'Ella Isabel 6th Birthday World Tour',
-        event_date: 'Domingo 19 de Abril, 2026',
-        event_time: '16:30 a 19:30',
-        event_location:
-          'Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica',
-      });
+      if (SEND_EMAILS) {
+        const emailjs = (
+          window as unknown as {
+            emailjs: {
+              send: (
+                serviceId: string,
+                templateId: string,
+                params: Record<string, string>,
+              ) => Promise<{ status: number }>;
+            };
+          }
+        ).emailjs;
 
-      // Send auto-confirmation email to guest with Golden Huntrix theme
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_AUTO_REPLY_TEMPLATE_ID, {
-        user_name: name,
-        user_email: email,
-        to_email: email,
-        event_name: 'Ella Isabel 6th Birthday World Tour',
-        event_date: 'Domingo 19 de Abril, 2026',
-        event_time: '16:30 a 19:30',
-        event_location:
-          'Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica',
-        calendar_link: googleCalendarUrl,
-        dress_code: 'K-Pop / Huntrix Golden - Los niños pueden ir disfrazados!',
-      });
+        if (!emailjs || !emailjsLoaded) {
+          throw new Error('EmailJS no está cargado');
+        }
+
+        // Send notification email to organizers
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          user_name: name,
+          user_email: email,
+          to_email: 'isabelmartinez19.30@gmail.com',
+          cc_email: 'alvarez.c.daniel@gmail.com',
+          event_name: 'Ella Isabel 6th Birthday World Tour',
+          event_date: 'Domingo 19 de Abril, 2026',
+          event_time: '16:30 a 19:30',
+          event_location:
+            'Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica',
+        });
+
+        // Send auto-confirmation email to guest with Golden Huntrix theme
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_AUTO_REPLY_TEMPLATE_ID, {
+          user_name: name,
+          user_email: email,
+          to_email: email,
+          event_name: 'Ella Isabel 6th Birthday World Tour',
+          event_date: 'Domingo 19 de Abril, 2026',
+          event_time: '16:30 a 19:30',
+          event_location:
+            'Salón de juegos Mundo Kids, Pedro León Gallo 706, Centro de Villarrica',
+          calendar_link: googleCalendarUrl,
+          dress_code: 'K-Pop / Huntrix Golden - Los niños pueden ir disfrazados!',
+        });
+      }
 
       onSubmit();
     } catch (err) {
-      console.error('EmailJS Error:', err);
-      setError('Error al enviar. Por favor intenta de nuevo.');
+      console.error('RSVP/EmailJS Error:', err);
+      setError(
+        err instanceof Error ? err.message : 'Error al enviar. Por favor intenta de nuevo.',
+      );
     } finally {
       setIsLoading(false);
     }
