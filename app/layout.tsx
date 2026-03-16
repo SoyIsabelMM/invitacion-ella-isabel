@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   title: 'Ella Isabel 6th Birthday World Tour - K-Pop Party',
   description: '¡Estás invitada a la fiesta de cumpleaños K-Pop de Ella Isabel! Domingo 19 de Abril en Mundo Kids.',
   generator: 'v0.app',
+  robots: 'noindex, nofollow',
   icons: {
     icon: [
       {
