@@ -30,18 +30,13 @@ const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID ?? '';
 const EMAILJS_TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID ?? '';
 const EMAILJS_AUTO_REPLY_TEMPLATE_ID =
   process.env.NEXT_PUBLIC_EMAILJS_AUTO_REPLY_TEMPLATE_ID ?? '';
-const EMAILJS_PUBLIC_KEY =
-  process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY ?? '';
+const EMAILJS_PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY ?? '';
 
 // Event details (from .env; used in emails and Google Calendar link)
-const EVENT_NAME =
-  process.env.NEXT_PUBLIC_RSVP_EVENT_NAME;
-const EVENT_DATE =
-  process.env.NEXT_PUBLIC_RSVP_EVENT_DATE;
-const EVENT_TIME =
-  process.env.NEXT_PUBLIC_RSVP_EVENT_TIME;
-const EVENT_LOCATION =
-  process.env.NEXT_PUBLIC_RSVP_EVENT_LOCATION;
+const EVENT_NAME = process.env.NEXT_PUBLIC_RSVP_EVENT_NAME;
+const EVENT_DATE = process.env.NEXT_PUBLIC_RSVP_EVENT_DATE;
+const EVENT_TIME = process.env.NEXT_PUBLIC_RSVP_EVENT_TIME;
+const EVENT_LOCATION = process.env.NEXT_PUBLIC_RSVP_EVENT_LOCATION;
 
 interface RSVPFormProps {
   isSubmitted: boolean;
@@ -58,6 +53,7 @@ const googleCalendarUrl = `https://www.google.com/calendar/render?action=TEMPLAT
 export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailjsLoaded, setEmailjsLoaded] = useState(false);
@@ -102,24 +98,26 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
 
     try {
       // Persist RSVP to backend first when API URL is configured
-      if (RSVP_API_URL) {
-        const res = await fetch(`${RSVP_API_URL}/api/rsvp`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            guestName: name.trim(),
-            guardianEmail: email.trim().toLowerCase(),
-          }),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          const msg =
-            Array.isArray(data?.errors) && data.errors.length > 0
-              ? data.errors.join('. ')
-              : data?.error ?? 'Error al guardar la confirmación. Intenta de nuevo.';
-          throw new Error(msg);
-        }
-      }
+      // if (RSVP_API_URL) {
+      //   const res = await fetch(`${RSVP_API_URL}/api/rsvp`, {
+      //     method: 'POST',
+      //     headers: { 'Content-Type': 'application/json' },
+      //     body: JSON.stringify({
+      //       guestName: name.trim(),
+      //       guardianEmail: email.trim().toLowerCase(),
+      //       phone: phone.trim(),
+      //     }),
+      //   });
+      //   if (!res.ok) {
+      //     const data = await res.json().catch(() => ({}));
+      //     const msg =
+      //       Array.isArray(data?.errors) && data.errors.length > 0
+      //         ? data.errors.join('. ')
+      //         : (data?.error ??
+      //           'Error al guardar la confirmación. Intenta de nuevo.');
+      //     throw new Error(msg);
+      //   }
+      // }
 
       if (SEND_EMAILS) {
         const emailjs = (
@@ -142,10 +140,9 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
           user_name: name,
           user_email: email,
-          to_email:
-            process.env.NEXT_PUBLIC_RSVP_ORGANIZER_TO_EMAIL ?? '',
-          cc_email:
-            process.env.NEXT_PUBLIC_RSVP_ORGANIZER_CC_EMAIL ?? '',
+          user_phone: phone,
+          to_email: process.env.NEXT_PUBLIC_RSVP_ORGANIZER_TO_EMAIL ?? '',
+          cc_email: process.env.NEXT_PUBLIC_RSVP_ORGANIZER_CC_EMAIL ?? '',
           event_name: EVENT_NAME!,
           event_date: EVENT_DATE!,
           event_time: EVENT_TIME!,
@@ -162,7 +159,8 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
           event_time: EVENT_TIME!,
           event_location: EVENT_LOCATION!,
           calendar_link: googleCalendarUrl,
-          dress_code: 'K-Pop / Huntrix Golden - Los niños pueden ir disfrazados!',
+          dress_code:
+            'K-Pop / Huntrix Golden - Los niños pueden ir disfrazados!',
         });
       }
 
@@ -170,7 +168,9 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
     } catch (err) {
       console.error('RSVP/EmailJS Error:', err);
       setError(
-        err instanceof Error ? err.message : 'Error al enviar. Por favor intenta de nuevo.',
+        err instanceof Error
+          ? err.message
+          : 'Error al enviar. Por favor intenta de nuevo.',
       );
     } finally {
       setIsLoading(false);
@@ -336,6 +336,28 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
                 placeholder="tu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="bg-input border-primary/30 focus:border-primary focus:ring-primary/50 text-foreground placeholder:text-muted-foreground h-12"
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Recibiras una confirmacion con los detalles del evento
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="user_phone"
+                className="text-foreground font-medium"
+              >
+                Número telefonico del apoderado/acompañante
+              </Label>
+              <Input
+                id="user_phone"
+                name="user_phone"
+                type="tel"
+                placeholder="Ejemplo: 912345678"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="bg-input border-primary/30 focus:border-primary focus:ring-primary/50 text-foreground placeholder:text-muted-foreground h-12"
                 required
               />
