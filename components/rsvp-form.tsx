@@ -136,32 +136,36 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
           throw new Error('EmailJS no está cargado');
         }
 
+        const processes = [];
         // Send notification email to organizers
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-          user_name: name,
-          user_email: email,
-          user_phone: phone,
-          to_email: process.env.NEXT_PUBLIC_RSVP_ORGANIZER_TO_EMAIL ?? '',
-          cc_email: process.env.NEXT_PUBLIC_RSVP_ORGANIZER_CC_EMAIL ?? '',
-          event_name: EVENT_NAME!,
-          event_date: EVENT_DATE!,
-          event_time: EVENT_TIME!,
-          event_location: EVENT_LOCATION!,
-        });
+        processes.push(
+          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            user_name: name,
+            user_email: email,
+            user_phone: phone,
+            event_name: EVENT_NAME!,
+            event_date: EVENT_DATE!,
+            event_time: EVENT_TIME!,
+            event_location: EVENT_LOCATION!,
+          }),
+        );
 
         // Send auto-confirmation email to guest with Golden Huntrix theme
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_AUTO_REPLY_TEMPLATE_ID, {
-          user_name: name,
-          user_email: email,
-          to_email: email,
-          event_name: EVENT_NAME!,
-          event_date: EVENT_DATE!,
-          event_time: EVENT_TIME!,
-          event_location: EVENT_LOCATION!,
-          calendar_link: googleCalendarUrl,
-          dress_code:
-            'K-Pop / Huntrix Golden - Los niños pueden ir disfrazados!',
-        });
+        processes.push(
+          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_AUTO_REPLY_TEMPLATE_ID, {
+            user_name: name,
+            user_email: email,
+            event_name: EVENT_NAME!,
+            event_date: EVENT_DATE!,
+            event_time: EVENT_TIME!,
+            event_location: EVENT_LOCATION!,
+            calendar_link: googleCalendarUrl,
+            dress_code:
+              'K-Pop / Huntrix Golden - Los niños pueden ir disfrazados!',
+          }),
+        );
+
+        await Promise.all(processes);
       }
 
       onSubmit();
