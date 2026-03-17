@@ -7,7 +7,7 @@ name: Deploy Next.js site to Pages
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: ["main"]
+    branches: ['main']
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -21,7 +21,7 @@ permissions:
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: false
 
 jobs:
@@ -51,7 +51,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
           cache: ${{ steps.detect-package-manager.outputs.manager }}
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -76,20 +76,21 @@ jobs:
       - name: Build with Next.js
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
         env:
-          NEXT_PUBLIC_SEND_EMAILS: "true"
+          NEXT_PUBLIC_SEND_EMAILS: ${{ vars.NEXT_PUBLIC_SEND_EMAILS }}
+          # EmailJS
           NEXT_PUBLIC_EMAILJS_SERVICE_ID: ${{ secrets.NEXT_PUBLIC_EMAILJS_SERVICE_ID }}
-          NEXT_PUBLIC_EMAILJS_TEMPLATE_ID: ${{ secrets.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID }}
-          NEXT_PUBLIC_EMAILJS_AUTO_REPLY_TEMPLATE_ID: ${{ secrets.NEXT_PUBLIC_EMAILJS_AUTO_REPLY_TEMPLATE_ID }}
           NEXT_PUBLIC_EMAILJS_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY }}
-          # Variables de Evento (Asegúrate de que coincidan con tus nombres en los secretos de GitHub)
-          NEXT_PUBLIC_RSVP_EVENT_NAME: ${{ secrets.NEXT_PUBLIC_RSVP_EVENT_NAME }}
-          NEXT_PUBLIC_RSVP_EVENT_DATE: ${{ secrets.NEXT_PUBLIC_RSVP_EVENT_DATE }}
-          NEXT_PUBLIC_RSVP_EVENT_TIME: ${{ secrets.NEXT_PUBLIC_RSVP_EVENT_TIME }}
-          NEXT_PUBLIC_RSVP_EVENT_LOCATION: ${{ secrets.NEXT_PUBLIC_RSVP_EVENT_LOCATION }}
-          NEXT_PUBLIC_RSVP_ORGANIZER_TO_EMAIL: ${{ secrets.NEXT_PUBLIC_RSVP_ORGANIZER_TO_EMAIL }}
-          NEXT_PUBLIC_RSVP_ORGANIZER_CC_EMAIL: ${{ secrets.NEXT_PUBLIC_RSVP_ORGANIZER_CC_EMAIL }}
+          NEXT_PUBLIC_EMAILJS_TEMPLATE_ID: ${{ vars.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID }}
+          NEXT_PUBLIC_EMAILJS_AUTO_REPLY_TEMPLATE_ID: ${{ vars.NEXT_PUBLIC_EMAILJS_AUTO_REPLY_TEMPLATE_ID }}
+          # Event details
+          NEXT_PUBLIC_RSVP_EVENT_NAME: ${{ vars.NEXT_PUBLIC_RSVP_EVENT_NAME }}
+          NEXT_PUBLIC_RSVP_EVENT_DATE: ${{ vars.NEXT_PUBLIC_RSVP_EVENT_DATE }}
+          NEXT_PUBLIC_RSVP_EVENT_TIME: ${{ vars.NEXT_PUBLIC_RSVP_EVENT_TIME }}
+          NEXT_PUBLIC_RSVP_EVENT_LOCATION: ${{ vars.NEXT_PUBLIC_RSVP_EVENT_LOCATION }}
+          # Organizer emails
+          NEXT_PUBLIC_RSVP_ORGANIZER_TO_EMAIL: ${{ vars.NEXT_PUBLIC_RSVP_ORGANIZER_TO_EMAIL }}
+          NEXT_PUBLIC_RSVP_ORGANIZER_CC_EMAIL: ${{ vars.NEXT_PUBLIC_RSVP_ORGANIZER_CC_EMAIL }}
 
-        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
