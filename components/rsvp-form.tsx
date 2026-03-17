@@ -98,26 +98,26 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
 
     try {
       // Persist RSVP to backend first when API URL is configured
-      // if (RSVP_API_URL) {
-      //   const res = await fetch(`${RSVP_API_URL}/api/rsvp`, {
-      //     method: 'POST',
-      //     headers: { 'Content-Type': 'application/json' },
-      //     body: JSON.stringify({
-      //       guestName: name.trim(),
-      //       guardianEmail: email.trim().toLowerCase(),
-      //       phone: phone.trim(),
-      //     }),
-      //   });
-      //   if (!res.ok) {
-      //     const data = await res.json().catch(() => ({}));
-      //     const msg =
-      //       Array.isArray(data?.errors) && data.errors.length > 0
-      //         ? data.errors.join('. ')
-      //         : (data?.error ??
-      //           'Error al guardar la confirmación. Intenta de nuevo.');
-      //     throw new Error(msg);
-      //   }
-      // }
+      if (RSVP_API_URL) {
+        const res = await fetch(`${RSVP_API_URL}/api/rsvp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            guestName: name.trim(),
+            guardianEmail: email.trim().toLowerCase(),
+            phone: phone.trim(),
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          const msg =
+            Array.isArray(data?.errors) && data.errors.length > 0
+              ? data.errors.join('. ')
+              : (data?.error ??
+                'Error al guardar la confirmación. Intenta de nuevo.');
+          throw new Error(msg);
+        }
+      }
 
       if (SEND_EMAILS) {
         const emailjs = (
