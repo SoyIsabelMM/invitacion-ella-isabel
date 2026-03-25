@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import Image from 'next/image';
 import {
   Send,
@@ -11,6 +11,8 @@ import {
   Ticket,
   Mail,
   Calendar,
+  XCircle,
+  HeartCrack,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,76 +52,191 @@ const googleCalendarUrl = `https://www.google.com/calendar/render?action=TEMPLAT
   'Fiesta de cumpleaños K-Pop de Ella Isabel. Tema: Huntrix Golden. Los niños pueden ir disfrazados!',
 )}&location=${encodeURIComponent(EVENT_LOCATION!)}&sf=true&output=xml`;
 
-export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
+export const RSVPForm = memo(function RSVPForm({
+  isSubmitted,
+  onSubmit,
+}: RSVPFormProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeclining, setIsDeclining] = useState(false);
+  const [hasDeclined, setHasDeclined] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailjsLoaded, setEmailjsLoaded] = useState(false);
 
-  // Load EmailJS SDK only when email sending is enabled
+  // Load EmailJS SDK only when email sending is enabled - optimized to load once
   useEffect(() => {
     if (!SEND_EMAILS) return;
+
+    // Check if already loaded
+    const existingEmailJS = (
+      window as unknown as { emailjs?: { init: (key: string) => void } }
+    ).emailjs;
+    if (existingEmailJS) {
+      setEmailjsLoaded(true);
+      return;
+    }
+
+    // Check if script is already in DOM
+    const existingScript = document.querySelector('script[src*="emailjs"]');
+    if (existingScript) {
+      existingScript.addEventListener('load', () => {
+        const emailjs = (
+          window as unknown as { emailjs: { init: (key: string) => void } }
+        ).emailjs;
+        if (emailjs) {
+          emailjs.init(EMAILJS_PUBLIC_KEY);
+          setEmailjsLoaded(true);
+        }
+      });
+      return;
+    }
+
     const script = document.createElement('script');
     script.src =
       'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
     script.async = true;
     script.onload = () => {
-      // Initialize EmailJS with public key
-      if (
-        typeof window !== 'undefined' &&
-        (window as unknown as { emailjs: { init: (key: string) => void } })
-          .emailjs
-      ) {
-        (
-          window as unknown as { emailjs: { init: (key: string) => void } }
-        ).emailjs.init(EMAILJS_PUBLIC_KEY);
+      const emailjs = (
+        window as unknown as { emailjs: { init: (key: string) => void } }
+      ).emailjs;
+      if (emailjs) {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
         setEmailjsLoaded(true);
       }
     };
     document.head.appendChild(script);
 
-    return () => {
-      // Cleanup script on unmount
-      const existingScript = document.querySelector(
-        `script[src="${script.src}"]`,
-      );
-      if (existingScript) {
-        existingScript.remove();
-      }
-    };
+    // Don't remove script on unmount to prevent re-loading
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Persist RSVP to backend first when API URL is configured
+        if (RSVP_API_URL) {
+          const res = await fetch(`${RSVP_API_URL}/api/rsvp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              guestName: name.trim(),
+              guardianEmail: email.trim().toLowerCase(),
+              phone: phone.trim(),
+            }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            const msg =
+              Array.isArray(data?.errors) && data.errors.length > 0
+                ? data.errors.join('. ')
+                : (data?.error ??
+                  'Error al guardar la confirmación. Intenta de nuevo.');
+            throw new Error(msg);
+          }
+        }
+
+        if (SEND_EMAILS) {
+          const emailjs = (
+            window as unknown as {
+              emailjs: {
+                send: (
+                  serviceId: string,
+                  templateId: string,
+                  params: Record<string, string>,
+                ) => Promise<{ status: number }>;
+              };
+            }
+          ).emailjs;
+
+          if (!emailjs || !emailjsLoaded) {
+            throw new Error('EmailJS no está cargado');
+          }
+
+          const processes = [];
+          // Send notification email to organizers
+          processes.push(
+            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+              user_name: name,
+              user_email: email,
+              user_phone: phone,
+              event_name: EVENT_NAME!,
+              event_date: EVENT_DATE!,
+              event_time: EVENT_TIME!,
+              event_location: EVENT_LOCATION!,
+              status: '✅ Confirmado - Asistirá 🫰🏽',
+            }),
+          );
+
+          // Send auto-confirmation email to guest with Golden Huntrix theme
+          processes.push(
+            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_AUTO_REPLY_TEMPLATE_ID, {
+              user_name: name,
+              user_email: email,
+              event_name: EVENT_NAME!,
+              event_date: EVENT_DATE!,
+              event_time: EVENT_TIME!,
+              event_location: EVENT_LOCATION!,
+              calendar_link: googleCalendarUrl,
+              dress_code:
+                'K-Pop / Huntrix Golden - Los niños pueden ir disfrazados!',
+            }),
+          );
+
+          await Promise.all(processes);
+        }
+
+        onSubmit();
+      } catch (err) {
+        console.error('RSVP/EmailJS Error:', err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Error al enviar. Por favor intenta de nuevo.',
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [name, email, phone, emailjsLoaded, onSubmit],
+  );
+
+  const handleDecline = useCallback(async () => {
+    if (!name.trim()) {
+      setError('Por favor ingresa el nombre del niño/a');
+      return;
+    }
+
+    setIsDeclining(true);
     setError(null);
 
     try {
-      // Persist RSVP to backend first when API URL is configured
+      // Persist decline to backend when API URL is configured
       if (RSVP_API_URL) {
         const res = await fetch(`${RSVP_API_URL}/api/rsvp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             guestName: name.trim(),
-            guardianEmail: email.trim().toLowerCase(),
-            phone: phone.trim(),
+            guardianEmail:
+              email.trim().toLowerCase() || 'no-email@declined.com',
+            phone: phone.trim() || 'N/A',
+            status: 'declined',
           }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          const msg =
-            Array.isArray(data?.errors) && data.errors.length > 0
-              ? data.errors.join('. ')
-              : (data?.error ??
-                'Error al guardar la confirmación. Intenta de nuevo.');
+          const msg = data?.error ?? 'Error al enviar. Intenta de nuevo.';
           throw new Error(msg);
         }
       }
 
-      if (SEND_EMAILS) {
+      // Send decline notification email to organizers if EmailJS is enabled
+      if (SEND_EMAILS && emailjsLoaded) {
         const emailjs = (
           window as unknown as {
             emailjs: {
@@ -132,54 +249,68 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
           }
         ).emailjs;
 
-        if (!emailjs || !emailjsLoaded) {
-          throw new Error('EmailJS no está cargado');
+        if (emailjs) {
+          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            user_name: name,
+            user_email: email || 'No proporcionado',
+            user_phone: phone || 'No proporcionado',
+            event_name: EVENT_NAME!,
+            event_date: EVENT_DATE!,
+            event_time: EVENT_TIME!,
+            event_location: EVENT_LOCATION!,
+            status: '❌ Declinado - No puede asistir',
+          });
         }
-
-        const processes = [];
-        // Send notification email to organizers
-        processes.push(
-          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-            user_name: name,
-            user_email: email,
-            user_phone: phone,
-            event_name: EVENT_NAME!,
-            event_date: EVENT_DATE!,
-            event_time: EVENT_TIME!,
-            event_location: EVENT_LOCATION!,
-          }),
-        );
-
-        // Send auto-confirmation email to guest with Golden Huntrix theme
-        processes.push(
-          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_AUTO_REPLY_TEMPLATE_ID, {
-            user_name: name,
-            user_email: email,
-            event_name: EVENT_NAME!,
-            event_date: EVENT_DATE!,
-            event_time: EVENT_TIME!,
-            event_location: EVENT_LOCATION!,
-            calendar_link: googleCalendarUrl,
-            dress_code:
-              'K-Pop / Huntrix Golden - Los niños pueden ir disfrazados!',
-          }),
-        );
-
-        await Promise.all(processes);
       }
 
-      onSubmit();
+      setHasDeclined(true);
     } catch (err) {
-      console.error('RSVP/EmailJS Error:', err);
+      console.error('Decline Error:', err);
       setError(
         err instanceof Error
           ? err.message
           : 'Error al enviar. Por favor intenta de nuevo.',
       );
     } finally {
-      setIsLoading(false);
+      setIsDeclining(false);
     }
-  };
+  }, [name, email, phone, emailjsLoaded]);
+
+  // Declined confirmation screen
+  if (hasDeclined) {
+    return (
+      <section>
+        <Card className="glassmorphism border-2 border-accent/50 overflow-hidden">
+          <CardContent className="p-6 md:p-8 text-center space-y-6">
+            <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 border-2 border-accent/50 flex items-center justify-center">
+              <HeartCrack className="w-10 h-10 text-accent" />
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-2xl font-bold text-accent">
+                Lamentamos que no puedas asistir
+              </h3>
+              <p className="text-muted-foreground">
+                Gracias por avisarnos. Esperamos verte en una proxima ocasion!
+              </p>
+            </div>
+
+            <div className="flex justify-center gap-3">
+              <Sparkles className="w-5 h-5 text-primary animate-twinkle" />
+              <Sparkles
+                className="w-5 h-5 text-accent animate-twinkle"
+                style={{ animationDelay: '0.2s' }}
+              />
+              <Sparkles
+                className="w-5 h-5 text-secondary animate-twinkle"
+                style={{ animationDelay: '0.4s' }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+    );
+  }
 
   if (isSubmitted) {
     return (
@@ -370,23 +501,47 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
               </p>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full h-14 text-lg font-bold gradient-gold text-primary-foreground hover:opacity-90 transition-all duration-300 glow-gold"
-              disabled={isLoading || (SEND_EMAILS && !emailjsLoaded)}
-            >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  Enviando...
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Send className="w-5 h-5" />
-                  Confirmar Asistencia
-                </div>
-              )}
-            </Button>
+            <div className="flex flex-col gap-3">
+              <Button
+                type="submit"
+                className="w-full h-14 text-lg font-bold gradient-gold text-primary-foreground hover:opacity-90 transition-all duration-300 glow-gold"
+                disabled={
+                  isLoading || isDeclining || (SEND_EMAILS && !emailjsLoaded)
+                }
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    Enviando...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Send className="w-5 h-5" />
+                    Confirmar Asistencia
+                  </div>
+                )}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDecline}
+                className="w-full h-12 text-base font-medium border-accent/50 text-accent hover:bg-accent/10 hover:text-accent transition-all duration-300"
+                disabled={isLoading || isDeclining}
+              >
+                {isDeclining ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+                    Enviando...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4" />
+                    No podré asistir
+                  </div>
+                )}
+              </Button>
+            </div>
 
             <p className="text-center text-xl text-accent font-semibold animate-pulse">
               Confirmar antes del 5 de Abril
@@ -396,4 +551,4 @@ export function RSVPForm({ isSubmitted, onSubmit }: RSVPFormProps) {
       </Card>
     </section>
   );
-}
+});
