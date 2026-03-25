@@ -1,17 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { memo } from 'react';
 import Image from 'next/image';
 import { Music, Volume2, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
-export function MusicPlayer() {
+const MusicPlayer = memo(function MusicPlayer() {
   // 1. Reemplaza este link por el de tu canción o playlist de Huntrix/K-pop
   const spotifyPlaylistUrl =
-    'https://open.spotify.com/embed/artist/2yNNYQBChuox9A5Ka93BIn?utm_source=generator&theme=0';
+    'https://open.spotify.com/embed/playlist/4r5mNXJ3UUrQjDMhBMzrzv?utm_source=generator';
 
   return (
-    <section className="w-full max-w-md mx-auto">
+    <section className="w-full mx-auto">
       <Card className="glassmorphism border-2 border-accent/50 overflow-hidden shadow-2xl">
         <CardContent className="p-0">
           {/* Header con tu estilo */}
@@ -55,10 +55,9 @@ export function MusicPlayer() {
                 src={spotifyPlaylistUrl}
                 width="100%"
                 height="152"
-                frameBorder="0"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
-                style={{ borderRadius: '12px' }}
+                style={{ borderRadius: '12px', border: 'none' }}
               ></iframe>
             </div>
 
@@ -82,4 +81,6 @@ export function MusicPlayer() {
       </Card>
     </section>
   );
-}
+});
+
+export default MusicPlayer;
