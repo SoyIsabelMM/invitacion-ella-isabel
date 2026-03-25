@@ -10,18 +10,10 @@ import { SpecialNotes } from '@/components/special-notes';
 import { FloatingDecorations } from '@/components/floating-decorations';
 
 // Lazy load heavier components for better initial load
-const MusicPlayer = dynamic(
-  () =>
-    import('@/components/music-player').then((mod) => ({
-      default: mod.MusicPlayer,
-    })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-32 bg-muted/20 rounded-lg animate-pulse" />
-    ),
-  },
-);
+const MusicPlayer = dynamic(() => import('@/components/music-player'), {
+  ssr: false,
+  loading: () => <div className="h-32 bg-muted/20 rounded-lg animate-pulse" />,
+});
 
 const RSVPForm = dynamic(
   () =>
