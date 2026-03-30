@@ -126,7 +126,8 @@ export const RSVPForm = memo(function RSVPForm({
             body: JSON.stringify({
               guestName: name.trim(),
               guardianEmail: email.trim().toLowerCase(),
-              phone: phone.trim(),
+              guardianPhone: phone.trim(),
+              status: 'confirmed',
             }),
           });
           if (!res.ok) {
@@ -224,7 +225,7 @@ export const RSVPForm = memo(function RSVPForm({
             guestName: name.trim(),
             guardianEmail:
               email.trim().toLowerCase() || 'no-email@declined.com',
-            phone: phone.trim() || 'N/A',
+            guardianPhone: phone.trim() || 'N/A',
             status: 'declined',
           }),
         });
