@@ -1,6 +1,6 @@
 # RSVP Backend
 
-API mínima en Express que persiste confirmaciones de asistencia (RSVP) en MongoDB. Pensada para el formulario de invitación del evento (nombre del invitado + email del apoderado).
+API mínima en Express que persiste confirmaciones de asistencia (RSVP) en MongoDB. Pensada para el formulario de invitación del evento (nombre del niño/a, email y teléfono del apoderado, y si asiste o declina).
 
 ## Requisitos
 
@@ -65,17 +65,26 @@ Por defecto el servidor escucha en `http://localhost:3001`.
 - **POST** `/api/rsvp`  
   - **Body (JSON):**
     - `guestName` (string, obligatorio): nombre del niño/a que asiste (máx. 200 caracteres).
-    - `guardianEmail` (string, obligatorio): email del padre/madre (formato email válido).
+    - `guardianEmail` (string, obligatorio): email del apoderado/acompañante (formato email válido).
+    - `guardianPhone` (string): teléfono del apoderado. **Obligatorio** si la asistencia es confirmada; opcional si se declina. Máx. 30 caracteres; en confirmación solo dígitos y símbolos habituales (`+`, espacios, `-`, `()`, `.`).
+    - `status` (string, opcional): `confirmed` o `declined` (sin distinguir mayúsculas). Si se omite o va vacío, se interpreta como **confirmed**.
   - **Éxito:** `201` con `{ "id": "<ObjectId>", "message": "RSVP registrado correctamente" }`.
   - **Error de validación:** `400` con `{ "errors": ["..."] }`.
+  - **Duplicado:** `409` si ya existe un documento con el mismo `guestName` y `guardianEmail`.
   - **Rate limit:** `429` con `{ "error": "Demasiadas solicitudes. Intenta más tarde." }` (límite: 10 peticiones por minuto por IP).
 
-Ejemplo con `curl`:
+Ejemplos con `curl`:
 
 ```bash
+# Confirmación de asistencia
 curl -X POST http://localhost:3001/api/rsvp \
   -H "Content-Type: application/json" \
-  -d '{"guestName":"María","guardianEmail":"padre@ejemplo.com"}'
+  -d '{"guestName":"María","guardianEmail":"padre@ejemplo.com","guardianPhone":"912345678","status":"confirmed"}'
+
+# No podrá asistir
+curl -X POST http://localhost:3001/api/rsvp \
+  -H "Content-Type: application/json" \
+  -d '{"guestName":"María","guardianEmail":"padre@ejemplo.com","guardianPhone":"N/A","status":"declined"}'
 ```
 
 ## Integración con el frontend
@@ -93,7 +102,7 @@ En producción, usa la URL pública del backend (ej. `https://api.tudominio.com`
 - **Helmet** para cabeceras HTTP seguras.
 - **CORS** restringido al origen configurado en `CORS_ORIGIN`.
 - **Rate limiting** en `/api/rsvp` (10 req/min por IP).
-- Validación y sanitización del body (trim, longitud, formato de email).
+- Validación y sanitización del body (trim, longitud, formato de email, teléfono y estado de asistencia).
 - Secretos en `.env`; no versionar `.env` (sí `.env.example`).
 
 ## Estructura del proyecto
@@ -112,4 +121,4 @@ _backend/
   tsconfig.json
 ```
 
-Los documentos se guardan en la colección `rsvps` con: `guestName`, `guardianEmail`, `createdAt`.
+Los documentos se guardan en la colección `rsvps` con: `guestName`, `guardianEmail`, `guardianPhone`, `status` (`confirmed` | `declined`), `createdAt`.

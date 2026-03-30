@@ -8,7 +8,7 @@ const COLLECTION = 'rsvps';
 
 router.post('/', validateRsvpBody, async (req: Request<object, object, RsvpBody>, res) => {
   try {
-    const { guestName, guardianEmail } = req.body;
+    const { guestName, guardianEmail, guardianPhone, status } = req.body;
     const db = getDb();
     const existing = await db.collection(COLLECTION).findOne({ guestName, guardianEmail });
     if (existing) {
@@ -18,6 +18,8 @@ router.post('/', validateRsvpBody, async (req: Request<object, object, RsvpBody>
     const result = await db.collection(COLLECTION).insertOne({
       guestName,
       guardianEmail,
+      guardianPhone,
+      status,
       createdAt: new Date(),
     });
 
