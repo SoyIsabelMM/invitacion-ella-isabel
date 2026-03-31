@@ -19,22 +19,36 @@ export const metadata: Metadata = {
     '¡Estás invitada a la fiesta de cumpleaños K-Pop de Ella Isabel! Domingo 19 de Abril en Mundo Kids.',
   generator: 'v0.app',
   robots: 'noindex, nofollow',
-  icons: {
-    icon: [
+
+  openGraph: {
+    title: '✨ Ella Isabel 6th Birthday World Tour ✨',
+    description:
+      '¡Reserva tu lugar VIP para el show K-Pop de Ella Isabel! 🫰🏽🎤',
+    url: 'https://soyisabelmm.github.io/invitacion-ella-isabel/',
+    siteName: 'Ella Isabel Birthday',
+    images: [
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
+        url: 'https://static01.nyt.com/images/2025/08/28/espanol/28cul-kpop-fandom-vjqt-ES-copy1/28cul-kpop-fandom-vjqt-articleLarge.jpg?quality=75&auto=webp&disable=upscale',
+        width: 1200,
+        height: 630,
+        alt: 'Huntrix K-Pop Banner',
       },
     ],
-    apple: '/apple-icon.png',
+    locale: 'es_CL',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ella Isabel 6th Birthday - K-Pop Party',
+    description: '¡No te pierdas el show! Confirma tu asistencia.',
+    images: [
+      'https://static01.nyt.com/images/2025/08/28/espanol/28cul-kpop-fandom-vjqt-ES-copy1/28cul-kpop-fandom-vjqt-articleLarge.jpg?quality=75&auto=webp&disable=upscale',
+    ],
+  },
+
+  icons: {
+    icon: '/bola.png',
+    apple: '/bola.png',
   },
 };
 
