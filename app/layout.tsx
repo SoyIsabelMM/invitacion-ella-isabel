@@ -47,8 +47,8 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    icon: '/bola.png',
-    apple: '/bola.png',
+    icon: 'bola.png',
+    apple: 'bola.png',
   },
 };
 
@@ -69,7 +69,6 @@ export default function RootLayout({
         className={`${outfit.variable} ${spaceGrotesk.variable} font-sans antialiased`}
       >
         {children}
-        <Analytics />
       </body>
     </html>
   );
