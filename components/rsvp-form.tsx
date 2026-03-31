@@ -22,6 +22,11 @@ import { Label } from '@/components/ui/label';
 // RSVP API (optional: if set, RSVPs are persisted on Backend before sending emails)
 const RSVP_API_URL = process.env.NEXT_PUBLIC_RSVP_API_URL ?? '';
 
+const RSVP_API_HEADERS: Record<string, string> = {
+  'Content-Type': 'application/json',
+  'ngrok-skip-browser-warning': '1',
+};
+
 // Feature flag: set to "true" or "1" to send emails via EmailJS; otherwise emails are skipped
 const SEND_EMAILS =
   process.env.NEXT_PUBLIC_SEND_EMAILS === 'true' ||
@@ -122,7 +127,7 @@ export const RSVPForm = memo(function RSVPForm({
         if (RSVP_API_URL) {
           const res = await fetch(`${RSVP_API_URL}/api/rsvp`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: RSVP_API_HEADERS,
             body: JSON.stringify({
               guestName: name.trim(),
               guardianEmail: email.trim().toLowerCase(),
@@ -220,7 +225,7 @@ export const RSVPForm = memo(function RSVPForm({
       if (RSVP_API_URL) {
         const res = await fetch(`${RSVP_API_URL}/api/rsvp`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: RSVP_API_HEADERS,
           body: JSON.stringify({
             guestName: name.trim(),
             guardianEmail:
