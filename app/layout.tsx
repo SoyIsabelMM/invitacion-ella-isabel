@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import { Outfit, Space_Grotesk } from 'next/font/google';
-import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 
 const outfit = Outfit({

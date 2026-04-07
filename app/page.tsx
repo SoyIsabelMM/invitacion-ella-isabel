@@ -38,6 +38,9 @@ const Footer = memo(function Footer() {
         <span className="text-accent">♪</span>
         <span className="text-secondary">✦</span>
       </div>
+      <p className="text-muted-foreground text-sm">
+        Creado por Mary Martínez. Desarrolladora Frontend y Fan del K-Pop
+      </p>
     </footer>
   );
 });
